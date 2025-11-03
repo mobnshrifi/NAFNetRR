@@ -1,0 +1,106 @@
+# Configuration for NAFNet-RR Training
+# فایل تنظیمات برای آموزش مدل NAFNet با Recurrent Reasoning
+
+# نام experiment
+exp_name: 'NAFNet_RR_deblur'
+
+# Random seed
+seed: 42
+
+# Model configuration
+model:
+  img_channel: 3                    # تعداد کانال‌های ورودی (3 برای RGB)
+  width: 64                         # تعداد کانال‌های پایه (32/64 برای مدل کوچک/متوسط)
+  middle_blk_num: 12                # تعداد بلوک‌های middle (8-16)
+  enc_blk_nums: [2, 2, 4, 8]       # تعداد بلوک‌ها در هر stage encoder
+  dec_blk_nums: [2, 2, 2, 2]       # تعداد بلوک‌ها در هر stage decoder
+  reasoning_iterations: 3           # تعداد iterations در Recurrent Reasoning
+  reasoning_positions:              # کجاها از reasoning استفاده شود
+    - 'middle'                      # در middle blocks
+    - 'decoder'                     # در decoder stages
+
+# Data configuration
+data:
+  # مسیرهای داده
+  train_degraded: './data/train/degraded'
+  train_clean: './data/train/clean'
+  val_degraded: './data/val/degraded'
+  val_clean: './data/val/clean'
+  
+  # برای استفاده از synthetic degradation
+  synthetic: false                  # true برای ایجاد تخریب مصنوعی
+  degradation_type: 'combined'      # 'blur', 'noise', 'jpeg', 'combined'
+  
+  # Data augmentation
+  patch_size: 256                   # اندازه patch برای training
+  augment: true                     # فعال‌سازی augmentation
+
+# Training configuration
+training:
+  # Optimization
+  batch_size: 8                     # اندازه batch (بسته به GPU memory)
+  epochs: 500                       # تعداد epoch ها
+  lr: 0.0002                        # learning rate اولیه
+  lr_min: 0.000001                 # حداقل learning rate
+  weight_decay: 0.0001             # وزن decay برای regularization
+  
+  # Learning rate scheduler
+  scheduler: 'cosine'               # 'cosine' یا 'step'
+  lr_decay_steps: 100               # برای step scheduler
+  lr_decay_gamma: 0.5               # برای step scheduler
+  
+  # Gradient clipping
+  grad_clip: 1.0                    # gradient clipping threshold
+  
+  # Progressive training
+  random_iterations: false          # استفاده از تعداد تصادفی iterations در training
+  
+  # Logging and saving
+  log_interval: 50                  # هر چند step لاگ بگیریم
+  val_interval: 1                   # هر چند epoch validation انجام شود
+  save_interval: 10                 # هر چند epoch checkpoint ذخیره شود
+  save_img_interval: 5              # هر چند epoch تصاویر ذخیره شوند
+  
+  # Hardware
+  num_workers: 8                    # تعداد worker ها برای dataloader
+
+# Paths
+checkpoint_dir: './experiments/checkpoints'
+log_dir: './experiments/logs'
+result_dir: './experiments/results'
+
+# Resume training
+resume: null                        # مسیر checkpoint برای ادامه training
+
+
+# ==============================================================================
+# مثال های دیگر برای تسک‌های مختلف:
+
+# برای Image Denoising:
+# ---
+# exp_name: 'NAFNet_RR_denoise'
+# model:
+#   width: 32
+#   middle_blk_num: 8
+#   reasoning_iterations: 4
+# data:
+#   synthetic: true
+#   degradation_type: 'noise'
+
+# برای مدل سبک‌تر (Light Model):
+# ---
+# model:
+#   width: 32
+#   middle_blk_num: 4
+#   enc_blk_nums: [1, 1, 1, 2]
+#   dec_blk_nums: [1, 1, 1, 1]
+#   reasoning_iterations: 2
+
+# برای مدل سنگین‌تر (Heavy Model):
+# ---
+# model:
+#   width: 128
+#   middle_blk_num: 16
+#   enc_blk_nums: [2, 4, 8, 16]
+#   dec_blk_nums: [2, 4, 8, 16]
+#   reasoning_iterations: 5
